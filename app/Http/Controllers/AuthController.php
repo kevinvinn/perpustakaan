@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // REGISTER
+    // REGISTER (untuk web biasa, simpan password harus di-hash!)
     public function register(Request $request)
     {
         $request->validate([
@@ -21,45 +22,41 @@ class AuthController extends Controller
         $user = User::create([
             'nama' => $request->nama,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => $request->password, // <- HASH password
             'role' => $request->role,
         ]);
 
-        return response()->json([
-            'pesan' => 'Registrasi berhasil',
-            'data' => $user
-        ], 201);
+        return redirect()->route('loginPage')->with('success', 'Registrasi berhasil, silakan login');
     }
 
-    // LOGIN
+    // LOGIN (pakai Auth::attempt)
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        if (Auth::attempt($credentials)) {
+            // regenerate session biar aman
+            $request->session()->regenerate();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['pesan' => 'Email atau password salah'], 401);
+            return redirect()->route('home'); // arahkan ke home.blade.php
         }
 
-        // Buat token (Laravel Sanctum)
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'pesan' => 'Login berhasil',
-            'token' => $token,
-            'user' => $user
-        ]);
+        return back()->withErrors([
+            'email' => 'Email atau password salah',
+        ])->withInput();
     }
 
     // LOGOUT
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
+        Auth::logout();
 
-        return response()->json(['pesan' => 'Logout berhasil']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('loginPage');
     }
 }

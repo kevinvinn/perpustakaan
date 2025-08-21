@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Laravel\Sanctum\HasApiTokens; // penting untuk token
+use Illuminate\Foundation\Auth\User as Authenticatable; // <- WAJIB pakai ini
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Model
+class User extends Authenticatable
 {
-    use HasFactory, HasApiTokens; // tambahkan HasApiTokens
+    use HasApiTokens, HasFactory, Notifiable;
 
-    // Nama tabel
+    // Nama tabel (opsional, default Laravel sudah 'users')
     protected $table = 'users';
 
     // Kolom yang bisa diisi massal
@@ -19,6 +20,12 @@ class User extends Model
         'email',
         'password',
         'role',
+    ];
+
+    // Kolom yang disembunyikan saat serialisasi
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     // Timestamps aktif
