@@ -8,19 +8,34 @@ use Illuminate\Http\Request;
 class KategoriController extends Controller
 {
     // GET semua kategori
-    public function tampilkanSemua()
+    public function tampilkanSemua(Request $request)
     {
-        return response()->json(Kategori::all());
+        $kategori = Kategori::all();
+
+        if ($request->expectsJson()) {
+            return response()->json($kategori);
+        }
+
+        return view('kategori.index', compact('kategori'));
     }
 
     // GET detail kategori berdasarkan ID
-    public function tampilkanDetail($id)
+    public function tampilkanDetail(Request $request, $id)
     {
         $kategori = Kategori::find($id);
+
         if (!$kategori) {
-            return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            }
+            return redirect()->route('kategori.index')->with('error', 'Kategori tidak ditemukan');
         }
-        return response()->json($kategori);
+
+        if ($request->expectsJson()) {
+            return response()->json($kategori);
+        }
+
+        return view('kategori.show', compact('kategori'));
     }
 
     // POST tambah kategori baru
@@ -34,10 +49,14 @@ class KategoriController extends Controller
             'nama' => $request->nama,
         ]);
 
-        return response()->json([
-            'pesan' => 'Kategori berhasil ditambahkan',
-            'data' => $kategori
-        ], 201);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'pesan' => 'Kategori berhasil ditambahkan',
+                'data' => $kategori
+            ], 201);
+        }
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil ditambahkan');
     }
 
     // PUT ubah kategori
@@ -45,31 +64,45 @@ class KategoriController extends Controller
     {
         $kategori = Kategori::find($id);
         if (!$kategori) {
-            return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            }
+            return redirect()->route('kategori.index')->with('error', 'Kategori tidak ditemukan');
         }
 
         $request->validate([
             'nama' => 'sometimes|string|max:255',
         ]);
 
-        $kategori->update($request->all());
+        $kategori->update($request->only('nama'));
 
-        return response()->json([
-            'pesan' => 'Kategori berhasil diubah',
-            'data' => $kategori
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'pesan' => 'Kategori berhasil diubah',
+                'data' => $kategori
+            ]);
+        }
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil diubah');
     }
 
     // DELETE hapus kategori
-    public function hapusKategori($id)
+    public function hapusKategori(Request $request, $id)
     {
         $kategori = Kategori::find($id);
         if (!$kategori) {
-            return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['pesan' => 'Kategori tidak ditemukan'], 404);
+            }
+            return redirect()->route('kategori.index')->with('error', 'Kategori tidak ditemukan');
         }
 
         $kategori->delete();
 
-        return response()->json(['pesan' => 'Kategori berhasil dihapus']);
+        if ($request->expectsJson()) {
+            return response()->json(['pesan' => 'Kategori berhasil dihapus']);
+        }
+
+        return redirect()->route('kategori.index')->with('success', 'Kategori berhasil dihapus');
     }
 }

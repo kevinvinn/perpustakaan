@@ -29,15 +29,26 @@ class BukuController extends Controller
             'kategori_id' => 'required|exists:kategori,id',
             'stok' => 'required|integer|min:0',
             'tahun_terbit' => 'required|digits:4|integer',
+            'deskripsi' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // validasi upload gambar
         ]);
 
-        $buku = Buku::create($request->all());
+        $data = $request->all();
+
+        // Kalau ada upload gambar
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('buku', 'public'); // simpan ke storage/app/public/buku
+            $data['image'] = $path;
+        }
+
+        $buku = Buku::create($data);
 
         return response()->json([
             'pesan' => 'Buku berhasil ditambahkan',
             'data' => $buku
         ], 201);
     }
+
 
     // Ubah buku
     public function ubahBuku(Request $request, $id)
@@ -49,15 +60,25 @@ class BukuController extends Controller
             'kategori_id' => 'exists:kategori,id',
             'stok' => 'integer|min:0',
             'tahun_terbit' => 'digits:4|integer',
+            'deskripsi' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $buku->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('buku', 'public');
+            $data['image'] = $path;
+        }
+
+        $buku->update($data);
 
         return response()->json([
             'pesan' => 'Buku berhasil diperbarui',
             'data' => $buku
         ]);
     }
+
 
     // Hapus buku
     public function hapusBuku($id)

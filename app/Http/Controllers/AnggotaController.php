@@ -8,16 +8,27 @@ use Illuminate\Http\Request;
 class AnggotaController extends Controller
 {
     // Menampilkan semua anggota
-    public function tampilkanSemua()
+    public function tampilkanSemua(Request $request)
     {
-        // tampilkan anggota beserta user terkait
-        return Anggota::with('user')->get();
+        $anggota = Anggota::with('user')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($anggota, 200);
+        }
+
+        return view('anggota.index', compact('anggota'));
     }
 
     // Menampilkan detail anggota by ID
-    public function tampilkanDetail($id)
+    public function tampilkanDetail(Request $request, $id)
     {
-        return Anggota::with('user')->findOrFail($id);
+        $anggota = Anggota::with('user')->findOrFail($id);
+
+        if ($request->wantsJson()) {
+            return response()->json($anggota, 200);
+        }
+
+        return view('anggota.detail', compact('anggota'));
     }
 
     // Menambah anggota baru
@@ -32,7 +43,15 @@ class AnggotaController extends Controller
 
         $anggota = Anggota::create($request->all());
 
-        return response()->json($anggota, 201);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Anggota berhasil ditambahkan',
+                'data' => $anggota
+            ], 201);
+        }
+
+        return redirect()->route('anggota.index')->with('success', 'Anggota berhasil ditambahkan');
     }
 
     // Mengubah data anggota
@@ -49,15 +68,30 @@ class AnggotaController extends Controller
 
         $anggota->update($request->all());
 
-        return response()->json($anggota, 200);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Anggota berhasil diperbarui',
+                'data' => $anggota
+            ], 200);
+        }
+
+        return redirect()->route('anggota.index')->with('success', 'Anggota berhasil diperbarui');
     }
 
     // Menghapus anggota
-    public function hapusAnggota($id)
+    public function hapusAnggota(Request $request, $id)
     {
         $anggota = Anggota::findOrFail($id);
         $anggota->delete();
 
-        return response()->json(['message' => 'Anggota berhasil dihapus']);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Anggota berhasil dihapus'
+            ], 200);
+        }
+
+        return redirect()->route('anggota.index')->with('success', 'Anggota berhasil dihapus');
     }
 }

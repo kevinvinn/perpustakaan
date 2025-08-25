@@ -9,22 +9,34 @@ use Illuminate\Validation\Rule;
 class JadwalPetugasController extends Controller
 {
     // GET semua jadwal
-    public function tampilkanSemua()
+    public function tampilkanSemua(Request $request)
     {
         $jadwal = JadwalPetugas::with('petugas')->get();
-        return response()->json($jadwal);
+
+        if ($request->wantsJson()) {
+            return response()->json($jadwal);
+        }
+
+        return view('jadwal.index', compact('jadwal'));
     }
 
     // GET detail jadwal by ID
-    public function tampilkanDetail($id)
+    public function tampilkanDetail(Request $request, $id)
     {
         $jadwal = JadwalPetugas::with('petugas')->find($id);
 
         if (!$jadwal) {
-            return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            }
+            return redirect()->route('jadwal.index')->with('error', 'Jadwal tidak ditemukan');
         }
 
-        return response()->json($jadwal);
+        if ($request->wantsJson()) {
+            return response()->json($jadwal);
+        }
+
+        return view('jadwal.show', compact('jadwal'));
     }
 
     // POST tambah jadwal petugas
@@ -41,7 +53,11 @@ class JadwalPetugasController extends Controller
 
         $jadwal = JadwalPetugas::create($request->only(['petugas_id', 'tanggal', 'shift']));
 
-        return response()->json($jadwal, 201);
+        if ($request->wantsJson()) {
+            return response()->json($jadwal, 201);
+        }
+
+        return redirect()->route('jadwal.index')->with('success', 'Jadwal berhasil ditambahkan');
     }
 
     // PUT update jadwal
@@ -50,7 +66,10 @@ class JadwalPetugasController extends Controller
         $jadwal = JadwalPetugas::find($id);
 
         if (!$jadwal) {
-            return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            }
+            return redirect()->route('jadwal.index')->with('error', 'Jadwal tidak ditemukan');
         }
 
         $request->validate([
@@ -64,20 +83,31 @@ class JadwalPetugasController extends Controller
 
         $jadwal->update($request->only(['petugas_id', 'tanggal', 'shift']));
 
-        return response()->json($jadwal);
+        if ($request->wantsJson()) {
+            return response()->json($jadwal);
+        }
+
+        return redirect()->route('jadwal.index')->with('success', 'Jadwal berhasil diperbarui');
     }
 
     // DELETE hapus jadwal
-    public function hapusJadwal($id)
+    public function hapusJadwal(Request $request, $id)
     {
         $jadwal = JadwalPetugas::find($id);
 
         if (!$jadwal) {
-            return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
+            }
+            return redirect()->route('jadwal.index')->with('error', 'Jadwal tidak ditemukan');
         }
 
         $jadwal->delete();
 
-        return response()->json(['message' => 'Jadwal berhasil dihapus']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Jadwal berhasil dihapus']);
+        }
+
+        return redirect()->route('jadwal.index')->with('success', 'Jadwal berhasil dihapus');
     }
 }
