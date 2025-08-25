@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Montserrat';
+}
+
+body {
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+}
+
+.left {
+  flex: 1;
+  padding: 50px;
+}
+
+.right img {
+  width: 750px;
+}
+
+.right {
+  flex: 1;
+  padding: 50px;
+  margin: 8px;
+  border-radius: 10px;
+}
+
+.child {
+  margin: 80px 50px 80px 150px;
+}
+
+/* Left Section */
+.child h1 {
+  font-size: 65px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 20px;
+}
+
+.child p {
+  margin: 10px 5px 30px;
+  color: #666;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 17px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+input[type="email"],
+input[type="password"] {
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 17px;
+  color: #5F0866;
+}
+
+input:focus {
+  border-color: #5F0866;
+  box-shadow: 0 0 0 2px #c4b5fd;
+}
+
+.options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #555;
+}
+
+.options a {
+  color: #7c3aed;
+  text-decoration: none;
+}
+
+.btn {
+  background: #5F0866;
+  color: #fff;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.btn:hover {
+  background: #7c0b85;
+}
+
+.register {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.register a {
+  color: #5F0866;
+  text-decoration: none;
+}
+
+/* Right Section */
+.right {
+  display: none; /* Hidden in mobile */
+  /* background: linear-gradient(135deg, #a78bfa, #7c3aed); */
+  justify-content: center;
+  align-items: center;
+}
+
+.image-placeholder {
+  width: 350px;
+  height: 350px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;
+  }
+  .right {
+    display: flex;
+  }
+}
