@@ -3,31 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Models\DetailPeminjaman;
+use App\Models\Buku;
 use Illuminate\Http\Request;
 
 class DetailPeminjamanController extends Controller
 {
     // GET semua detail peminjaman
-    public function tampilkanSemua()
+    public function tampilkanSemua(Request $request)
     {
         $detail = DetailPeminjaman::with(['peminjaman', 'buku'])->get();
-        return response()->json($detail);
+
+        // Jika request ingin JSON (API)
+        if ($request->wantsJson()) {
+            return response()->json($detail);
+        }
+
+        // Jika request dari web
+        return view('detailpeminjaman.index', compact('detail'));
     }
 
     // GET detail by ID
-    public function tampilkanDetail($id)
+    public function tampilkanDetail(Request $request, $id)
     {
         $detail = DetailPeminjaman::with(['peminjaman', 'buku'])->find($id);
 
         if (!$detail) {
-            return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->back()->with('error', 'Detail peminjaman tidak ditemukan');
         }
 
-        return response()->json($detail);
+        if ($request->wantsJson()) {
+            return response()->json($detail);
+        }
+
+        return view('detailpeminjaman.show', compact('detail'));
     }
 
     // POST tambah detail peminjaman
-   // POST tambah detail peminjaman
     public function tambahDetail(Request $request)
     {
         $request->validate([
@@ -36,13 +50,16 @@ class DetailPeminjamanController extends Controller
             'jumlah' => 'required|integer|min:1',
         ]);
 
-        // Cek stok buku
-        $buku = \App\Models\Buku::find($request->buku_id);
+        $buku = Buku::find($request->buku_id);
+
         if ($request->jumlah > $buku->stok) {
-            return response()->json([
-                'message' => 'Jumlah buku yang dipinjam melebihi stok tersedia',
-                'stok_tersedia' => $buku->stok
-            ], 400);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Jumlah buku melebihi stok tersedia',
+                    'stok_tersedia' => $buku->stok
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'Jumlah buku melebihi stok tersedia. Stok: '.$buku->stok);
         }
 
         $detail = DetailPeminjaman::create($request->only([
@@ -51,14 +68,17 @@ class DetailPeminjamanController extends Controller
             'jumlah',
         ]));
 
-        // Kurangi stok buku setelah dipinjam
         $buku->stok -= $request->jumlah;
         $buku->save();
 
-        return response()->json([
-            'message' => 'Detail peminjaman berhasil ditambahkan',
-            'data' => $detail
-        ], 201);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Detail peminjaman berhasil ditambahkan',
+                'data' => $detail
+            ], 201);
+        }
+
+        return redirect()->route('detailpeminjaman.index')->with('success', 'Detail peminjaman berhasil ditambahkan');
     }
 
     // PUT update detail peminjaman
@@ -67,7 +87,10 @@ class DetailPeminjamanController extends Controller
         $detail = DetailPeminjaman::find($id);
 
         if (!$detail) {
-            return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->back()->with('error', 'Detail peminjaman tidak ditemukan');
         }
 
         $request->validate([
@@ -82,23 +105,34 @@ class DetailPeminjamanController extends Controller
             'jumlah',
         ]));
 
-        return response()->json([
-            'message' => 'Detail peminjaman berhasil diperbarui',
-            'data' => $detail
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Detail peminjaman berhasil diperbarui',
+                'data' => $detail
+            ]);
+        }
+
+        return redirect()->route('detailpeminjaman.index')->with('success', 'Detail peminjaman berhasil diperbarui');
     }
 
     // DELETE hapus detail peminjaman
-    public function hapusDetail($id)
+    public function hapusDetail(Request $request, $id)
     {
         $detail = DetailPeminjaman::find($id);
 
         if (!$detail) {
-            return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Detail peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->back()->with('error', 'Detail peminjaman tidak ditemukan');
         }
 
         $detail->delete();
 
-        return response()->json(['message' => 'Detail peminjaman berhasil dihapus']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Detail peminjaman berhasil dihapus']);
+        }
+
+        return redirect()->route('detailpeminjaman.index')->with('success', 'Detail peminjaman berhasil dihapus');
     }
 }

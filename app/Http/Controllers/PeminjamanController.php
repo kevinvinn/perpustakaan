@@ -11,26 +11,44 @@ use Carbon\Carbon;
 class PeminjamanController extends Controller
 {
     // GET semua peminjaman
-    public function tampilkanSemua()
+    public function index(Request $request)
     {
         $peminjaman = Peminjaman::with(['anggota', 'petugas'])->get();
-        return response()->json($peminjaman);
+
+        if ($request->wantsJson()) {
+            return response()->json($peminjaman);
+        }
+
+        return view('peminjaman.index', compact('peminjaman'));
     }
 
-    // GET detail peminjaman by ID
-    public function tampilkanDetail($id)
+    // GET detail peminjaman
+    public function show(Request $request, $id)
     {
         $peminjaman = Peminjaman::with(['anggota', 'petugas'])->find($id);
 
         if (!$peminjaman) {
-            return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->route('peminjaman.index')->with('error', 'Data peminjaman tidak ditemukan');
         }
 
-        return response()->json($peminjaman);
+        if ($request->wantsJson()) {
+            return response()->json($peminjaman);
+        }
+
+        return view('peminjaman.show', compact('peminjaman'));
+    }
+
+    // FORM create
+    public function create()
+    {
+        return view('peminjaman.create');
     }
 
     // POST tambah peminjaman
-    public function tambahPeminjaman(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'anggota_id' => 'required|exists:anggota,id',
@@ -51,19 +69,33 @@ class PeminjamanController extends Controller
             'status',
         ]));
 
-        return response()->json([
-            'message' => 'Peminjaman berhasil ditambahkan',
-            'data' => $peminjaman
-        ], 201);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Peminjaman berhasil ditambahkan',
+                'data' => $peminjaman
+            ], 201);
+        }
+
+        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil ditambahkan');
+    }
+
+    // FORM edit
+    public function edit($id)
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
+        return view('peminjaman.edit', compact('peminjaman'));
     }
 
     // PUT update peminjaman
-    public function ubahPeminjaman(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $peminjaman = Peminjaman::find($id);
 
         if (!$peminjaman) {
-            return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->route('peminjaman.index')->with('error', 'Peminjaman tidak ditemukan');
         }
 
         $request->validate([
@@ -94,7 +126,7 @@ class PeminjamanController extends Controller
 
             if ($tglPengembalian->greaterThan($tglKembali)) {
                 $hariTerlambat = $tglKembali->diffInDays($tglPengembalian);
-                $tarifDendaPerHari = 2000; // contoh: 2000 rupiah per hari
+                $tarifDendaPerHari = 2000; // contoh
                 $jumlahDenda = $hariTerlambat * $tarifDendaPerHari;
 
                 Denda::create([
@@ -105,23 +137,34 @@ class PeminjamanController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Peminjaman berhasil diperbarui',
-            'data' => $peminjaman
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Peminjaman berhasil diperbarui',
+                'data' => $peminjaman
+            ]);
+        }
+
+        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil diperbarui');
     }
 
     // DELETE hapus peminjaman
-    public function hapusPeminjaman($id)
+    public function destroy(Request $request, $id)
     {
         $peminjaman = Peminjaman::find($id);
 
         if (!$peminjaman) {
-            return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Peminjaman tidak ditemukan'], 404);
+            }
+            return redirect()->route('peminjaman.index')->with('error', 'Peminjaman tidak ditemukan');
         }
 
         $peminjaman->delete();
 
-        return response()->json(['message' => 'Peminjaman berhasil dihapus']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Peminjaman berhasil dihapus']);
+        }
+
+        return redirect()->route('peminjaman.index')->with('success', 'Peminjaman berhasil dihapus');
     }
 }
